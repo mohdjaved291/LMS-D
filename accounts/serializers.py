@@ -22,11 +22,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id","full_name","email","phone_number","date_of_birth", "role",]
 
 class RegisterSerializer(serializers.ModelSerializer):
-    confirm_password=serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ["full_name","email","phone_number","date_of_birth", "role", "password","confirm_password"]
+        fields = ["full_name", "email", "phone_number", "date_of_birth", "role", "password", "confirm_password"]
         extra_kwargs = {"password": {"write_only": True}}
 
     def validate_password(self, value):
@@ -35,16 +35,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.messages)
         return value
-    
-    def validate(self,attrs):
-        if attrs["password"]!=attrs["confirm_password"]:
-            raise serializers.ValidationError({"confirm_password":"Passwords do not match."})
+
+    def validate(self, attrs):
+        if attrs["password"] != attrs["confirm_password"]:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
         return attrs
 
     def create(self, validated_data):
         validated_data.pop("confirm_password")
-
-        otp = random.randint(100000, 999999)
         user = User.objects.create_user(
             full_name=validated_data["full_name"],
             email=validated_data["email"],
@@ -53,26 +51,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
             role=validated_data.get("role", "student"),
             is_active=False,
-            otp=otp,
-            otp_created_at=timezone.now(),
         )
-
-        # Send email verification
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = token_generator.make_token(user)
-
-        try:
-            send_mail(
-            "Your OTP for Email Verification",
-            f"Your OTP is: {otp}",
-            'ashokpython20@gmail.com',
-            [user.email],
-            fail_silently=False,
-            )
-        except Exception as e:
-            # Log the error properly
-            print("Email sending failed:", e)
-
         return user
 
 class LoginSerializer(serializers.Serializer):

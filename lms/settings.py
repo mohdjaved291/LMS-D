@@ -154,7 +154,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'ashokpython20@gmail.com'  
-EMAIL_HOST_PASSWORD = 'btdh vadv nchp bbfm '  
+EMAIL_HOST_PASSWORD = 'btdh vadv nchp bbfm'  
 DEFAULT_FROM_EMAIL = 'ashokpython20@gmail.com'
 
 # Static files (CSS, JavaScript, Images)
