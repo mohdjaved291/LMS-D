@@ -65,7 +65,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             send_mail(
             "Your OTP for Email Verification",
             f"Your OTP is: {otp}",
-            settings.DEFAULT_FROM_EMAIL,
+            'ashokpython20@gmail.com',
             [user.email],
             fail_silently=False,
             )
@@ -146,7 +146,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         send_mail(
             "Reset Your Password",
             f"Click the link to reset your password:\n\n{reset_url}",
-            settings.DEFAULT_FROM_EMAIL,
+            'ashokpython20@gmail.com',
             [user.email],
             fail_silently=False,
         )
