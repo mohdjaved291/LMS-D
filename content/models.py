@@ -1,6 +1,26 @@
+import os
 from django.db import models
+from django.core.exceptions import ValidationError
 from course.models import Course
 from batch.models import Batch
+
+# 500 MB limit for recorded video uploads
+MAX_VIDEO_SIZE = 500 * 1024 * 1024
+
+ALLOWED_VIDEO_FORMATS = ['.mp4', '.mov', '.avi']
+
+
+def validate_video_file_size(file):
+    if file.size > MAX_VIDEO_SIZE:
+        raise ValidationError(f"Video size must not exceed 500 MB. Your file is {file.size // (1024*1024)} MB.")
+
+
+def validate_video_file_format(file):
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in ALLOWED_VIDEO_FORMATS:
+        raise ValidationError(
+            f"Unsupported video format '{ext}'. Allowed formats: {', '.join(ALLOWED_VIDEO_FORMATS)}"
+        )
 
 class Module(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='modules')
@@ -35,7 +55,13 @@ class Video(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='videos')     #Links the video to a specific course (e.g., Python for Beginners).
     syllabus = models.ForeignKey('Syllabus', on_delete=models.CASCADE, related_name='videos', null=True, blank=True)
     title = models.CharField(max_length=255)        #Title of the video/Topic name (e.g., “Intro to Variables”).
-    video_file = models.FileField(upload_to='videos/')
+    video_file = models.FileField(
+        upload_to='videos/',
+        blank=True,
+        null=True,
+        validators=[validate_video_file_size, validate_video_file_format]
+    )
+    vimeo_video_id = models.CharField(max_length=100, blank=True, null=True, help_text="Vimeo video ID for embedded playback")
     duration = models.PositiveIntegerField(help_text="Duration in seconds")
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='videos', null=True, blank=True)
 

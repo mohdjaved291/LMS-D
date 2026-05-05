@@ -425,3 +425,85 @@ class CourseArchiveAPIView(APIView):
         course.is_archived = True
         course.save()
         return Response({'message': 'Course archived successfully.'})
+
+
+# -------- Razorpay Payment Views --------
+
+class RazorpayCreateOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        import razorpay
+        from django.conf import settings
+
+        amount = request.data.get('amount')
+        course_id = request.data.get('course_id')
+
+        if not amount or not course_id:
+            return Response({'error': 'amount and course_id are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not settings.RAZORPAY_KEY_ID or not settings.RAZORPAY_KEY_SECRET:
+            return Response({'error': 'Razorpay is not configured on the server.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        try:
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+            order = client.order.create({
+                'amount': int(float(amount)) * 100,
+                'currency': 'INR',
+                'notes': {'course_id': str(course_id)},
+            })
+            return Response({
+                'order_id': order['id'],
+                'amount': order['amount'],
+                'currency': order['currency'],
+                'key': settings.RAZORPAY_KEY_ID,
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RazorpayVerifyPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        import razorpay
+        import hmac
+        import hashlib
+        from django.conf import settings
+
+        payment_id = request.data.get('razorpay_payment_id')
+        order_id = request.data.get('razorpay_order_id')
+        signature = request.data.get('razorpay_signature')
+        course_id = request.data.get('course_id')
+
+        if not all([payment_id, order_id, signature, course_id]):
+            return Response({'error': 'Missing required payment fields.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify Razorpay signature
+        body = f'{order_id}|{payment_id}'.encode()
+        expected_signature = hmac.new(
+            settings.RAZORPAY_KEY_SECRET.encode(),
+            body,
+            hashlib.sha256
+        ).hexdigest()
+
+        if expected_signature != signature:
+            return Response({'error': 'Payment verification failed. Invalid signature.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Enroll the student in the course
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({'error': 'Course not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        enrollment, created = Enrollment.objects.get_or_create(
+            user=request.user,
+            course=course,
+        )
+
+        return Response({
+            'success': True,
+            'enrolled': created,
+            'payment_id': payment_id,
+            'message': 'Payment verified and enrollment successful.' if created else 'Already enrolled.',
+        })
