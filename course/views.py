@@ -1,3 +1,7 @@
+import hmac
+import hashlib
+import razorpay
+from django.conf import settings
 from rest_framework import generics, permissions, status
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
@@ -433,9 +437,6 @@ class RazorpayCreateOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        import razorpay
-        from django.conf import settings
-
         amount = request.data.get('amount')
         course_id = request.data.get('course_id')
 
@@ -466,11 +467,6 @@ class RazorpayVerifyPaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        import razorpay
-        import hmac
-        import hashlib
-        from django.conf import settings
-
         payment_id = request.data.get('razorpay_payment_id')
         order_id = request.data.get('razorpay_order_id')
         signature = request.data.get('razorpay_signature')

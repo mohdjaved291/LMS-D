@@ -1,3 +1,4 @@
+import os
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -15,7 +16,6 @@ def validate_assignment_file_size(file):
 
 
 def validate_assignment_file_format(file):
-    import os
     ext = os.path.splitext(file.name)[1].lower()
     if ext not in ALLOWED_ASSIGNMENT_FORMATS:
         raise ValidationError(

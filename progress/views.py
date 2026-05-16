@@ -18,7 +18,11 @@ class VideoProgressListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return VideoProgress.objects.filter(student=self.request.user)
+        queryset = VideoProgress.objects.filter(student=self.request.user)
+        video_id = self.request.query_params.get('video')
+        if video_id:
+            queryset = queryset.filter(video_id=video_id)
+        return queryset
 
 class UpdateVideoProgressView(APIView):
     permission_classes = [permissions.IsAuthenticated]
