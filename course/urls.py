@@ -23,6 +23,9 @@ from .views import (
     EnrollCourseAPIView, UserEnrollmentListAPIView, MyEnrollmentsAPIView, EnrollmentProgressUpdateView,
     CourseArchiveAPIView,
 
+    # Razorpay Payment
+    RazorpayCreateOrderView, RazorpayVerifyPaymentView,
+
 )
 
 urlpatterns = [
@@ -66,5 +69,9 @@ urlpatterns = [
 
     #Archive Course
     path('courses/<int:pk>/archive/',CourseArchiveAPIView.as_view(),name='course-archive'),
+
+    # Razorpay Payment
+    path('payment/create-order/', RazorpayCreateOrderView.as_view(), name='razorpay-create-order'),
+    path('payment/verify/', RazorpayVerifyPaymentView.as_view(), name='razorpay-verify-payment'),
 ]
 
