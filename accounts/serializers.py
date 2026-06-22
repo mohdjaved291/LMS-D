@@ -50,7 +50,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             date_of_birth=validated_data["date_of_birth"],
             password=validated_data["password"],
             role=validated_data.get("role", "student"),
-            is_active=False,
+            is_active=True,
         )
         return user
 

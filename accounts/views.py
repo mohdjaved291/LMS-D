@@ -45,30 +45,10 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-
-        # Generate OTP and save on user
-        otp = random.randint(100000, 999999)
-        user.otp = otp
-        user.otp_created_at = timezone.now()
-        user_email = user.email
-        user.save()
-
-        # Send OTP email
-        try:
-            send_mail(
-                "Your OTP for Email Verification",
-                f"Your OTP is: {otp}",
-                'ashokpython20@gmail.com',
-                [user_email],
-                fail_silently=True,
-            )
-        except Exception as e:
-            # Log the error properly (better to use logging here in real projects)
-            print("Email sending failed:", e)
+        serializer.save()
 
         return Response(
-            {"detail": "Registration successful. Please check your email to verify your account."},
+            {"detail": "Registration successful. You can now log in."},
             status=status.HTTP_201_CREATED,
         )
 
