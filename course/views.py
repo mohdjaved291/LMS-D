@@ -237,14 +237,22 @@ class FAQDetailView(generics.RetrieveUpdateDestroyAPIView):
 # ---------------- COURSE VIEWS ----------------
 
 class CourseListCreateAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request):
         courses = Course.objects.filter(is_archived=False)
+        category = request.query_params.get('category')
+        if category:
+            courses = courses.filter(category__name__iexact=category)
+        search = request.query_params.get('search')
+        if search:
+            courses = courses.filter(title__icontains=search)
         serializer = CourseListSerializer(courses, many=True, context={'request': request})
         return Response(serializer.data, status=200)
 
     def post(self, request):
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required to create courses.'}, status=401)
         if not IsCourseManager().has_permission(request, self) and not IsAdminUser().has_permission(request,self):
             return Response({'error': 'You do not have permission to create courses.'}, status=403)
 

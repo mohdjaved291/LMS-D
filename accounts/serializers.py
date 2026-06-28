@@ -120,15 +120,18 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = token_generator.make_token(user)
-        reset_url = f"http://127.0.0.1:8000/accounts/password-reset-confirm/{uid}/{token}/"
+        reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
 
-        send_mail(
-            "Reset Your Password",
-            f"Click the link to reset your password:\n\n{reset_url}",
-            'ashokpython20@gmail.com',
-            [user.email],
-            fail_silently=False,
-        )
+        try:
+            send_mail(
+                "Reset Your Password",
+                f"Click the link to reset your password:\n\n{reset_url}",
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            print("Password reset email sending failed:", e)
 
 #  Password Reset Confirm Serializer
 class PasswordResetConfirmSerializer(serializers.Serializer):
@@ -172,7 +175,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True)
     confirm_new_password = serializers.CharField(required=True)
 
-    def validate_password(self, value):
+    def validate_old_password(self, value):
         user = self.context['request'].user
         if not user.check_password(value):
             raise serializers.ValidationError("Old password is incorrect.")

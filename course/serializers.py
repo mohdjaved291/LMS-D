@@ -9,6 +9,7 @@ from progress.models import SyllabusProgress
 from progress.serializers import SyllabusProgressSerializer
 from progress.utils import calculate_course_progress_percent
 from batch.serializers import BatchMiniSerializer
+from batch.models import BatchStudent
 
 
 User = get_user_model()
@@ -263,11 +264,19 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     course = CourseFilterSerializer(read_only=True)
     user = UserSerializer(read_only=True)
     last_watched_video = VideoMiniSerializer(read_only=True)
-    batch = BatchMiniSerializer(read_only=True)
+    batch = serializers.SerializerMethodField()
 
     class Meta:
         model = Enrollment
         fields = ['id', 'user', 'course', 'batch', 'enrolled_at', 'progress_percent', 'last_watched_video']
+
+    def get_batch(self, obj):
+        batch_student = BatchStudent.objects.filter(
+            student=obj.user,
+            batch__batch_specific_course=obj.course,
+            batch__is_archived=False,
+        ).select_related('batch').first()
+        return BatchMiniSerializer(batch_student.batch).data if batch_student else None
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

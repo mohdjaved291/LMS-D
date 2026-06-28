@@ -159,6 +159,8 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
 #  Gmail SMTP email settings for verification and password reset
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
